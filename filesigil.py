@@ -20,9 +20,9 @@ File Signature (Don't Delete or Modify this lines unless you know what you are d
 
 '''
 Application Name: FileSigil
-Version: 1.0.1 (Beta)
+Version: 1.2 (Stable)
 Release Date: 31st October 2023
-File Name: filesigil_v1.1(B).py
+File Name: filesigil_v1.2.py
 Python Version: 3
 Best Suitable Python Version: 3.7
 Compiled Python Version:
@@ -44,7 +44,7 @@ from prompt_toolkit.completion import PathCompleter
 from prompt_toolkit.shortcuts import CompleteStyle
 
 # Version of the tool
-version = "1.0.1 (Beta)"
+version = "1.2"
 init(autoreset=True)  # Initialize colorama for colored output
 
 # Check if the current OS is Windows (Backslash for Windows / Forward slash for Linux and other Unix-like systems)
@@ -53,7 +53,7 @@ path_separator = os.path.sep
 # List of forbidden files, folders, and extensions
 forbidden_files = ["changelog.txt", "changelogs.txt", "changelogs", "changelog", "changelog.md", "changelogs.md", "readme.md", "readme.txt", "readme"]
 forbidden_folders = [".git"]
-forbidden_extensions = ['.sql', '.gitignore', '.db']
+forbidden_extensions = ['.sql', '.gitignore', '.db', '.log', '.rar', '.zip', '.tar', '.7z']
 
 # Output filenames
 output_single_csv = "FilesHashes.csv"
@@ -240,9 +240,9 @@ def main():
         print(f"Blacklisted Folders: " + Back.RED + "None" + Style.RESET_ALL + Fore.RED + " (Everything Allowed)" + Style.RESET_ALL)
     
     if forbidden_extensions:
-        print(f"Blacklisted Folders: {', '.join([Back.RED + item + Style.RESET_ALL for item in forbidden_extensions])}")
+        print(f"Blacklisted Extensions: {', '.join([Back.RED + item + Style.RESET_ALL for item in forbidden_extensions])}")
     else:
-        print(f"Blacklisted Folders: " + Back.RED + "None" + Style.RESET_ALL + Fore.RED + " (Everything Allowed)" + Style.RESET_ALL)
+        print(f"Blacklisted Extensions: " + Back.RED + "None" + Style.RESET_ALL + Fore.RED + " (Everything Allowed)" + Style.RESET_ALL)
 
     print(Back.MAGENTA + "Output Directory:" + Style.RESET_ALL + " " + output_dir)
     print(Back.MAGENTA + "CSV File Name:" + Style.RESET_ALL + " " + output_single_csv + " (" + output_dir + path_separator + output_single_csv +")")
@@ -254,7 +254,7 @@ def main():
             folder_path = input_with_tab_completion("Enter the path of the folder: ")
             if folder_path.lower() == "exit()":
                 print(Fore.RED + "\nExit command detected. Exiting..." + Style.RESET_ALL)
-                exit()
+                sys.exit()
             if not os.path.exists(folder_path):
                 print(Fore.RED + "Error: Input path do not exist. Please try again, or type exit()" + Style.RESET_ALL)
                 continue
@@ -266,10 +266,10 @@ def main():
     folder_path = os.path.abspath(folder_path)
     if not pathCheck(folder_path, current_directory):
         print(Fore.RED + "Run this program from outside of the project directory." + Style.RESET_ALL)
-        exit()
+        sys.exit()
     if not pathCheck(folder_path, output_dir):
         print(Fore.RED + "Output directory must outside of the project directory." + Style.RESET_ALL)
-        exit()
+        sys.exit()
     found_files = check_files_in_folder(folder_path, forbidden_files, forbidden_folders, forbidden_extensions)
     if found_files != False:
         forbidden_files_found, forbidden_folders_found, forbidden_extensions_found = found_files
@@ -343,22 +343,22 @@ if __name__ == "__main__":
     if user_input_working_dict is not None:
         if not os.path.exists(user_input_working_dict):
             print(Fore.RED + "Error: Input path do not exist." + Style.RESET_ALL)
-            exit()
+            sys.exit()
         else:
             project_dir = user_input_working_dict
             if not pathCheck(user_input_working_dict, current_directory):
                 print(Fore.RED + "Place the program out side of project directory." + Style.RESET_ALL)
-                exit()
+                sys.exit()
     if user_input_output_dict is not None:
         if not os.path.exists(user_input_output_dict):
             print(Fore.RED + "Error: Output path do not exist." + Style.RESET_ALL)
-            exit()
+            sys.exit()
         else:
             output_dir = user_input_output_dict
             if user_input_working_dict is not None:
                 if not pathCheck(user_input_working_dict, output_dir):
                     print(Fore.RED + "Output directory must outside of the project directory." + Style.RESET_ALL)
-                    exit()
+                    sys.exit()
     if args.hashcsv is not None:
         output_single_csv = args.hashcsv
     if args.zipcsv is not None:
@@ -372,22 +372,26 @@ if __name__ == "__main__":
                     pass
                 else:
                     print(Fore.RED + "Error: Not a valid ZIP filename." + Style.RESET_ALL)
-                    exit()
+                    sys.exit()
             else:
                 print(Fore.RED + "Error: Filenames should not be absolute paths." + Style.RESET_ALL)
-                exit()
+                sys.exit()
         else:
             print(Fore.RED + "Error: Both Filenames must be valid CSV filenames." + Style.RESET_ALL)
-            exit()
+            sys.exit()
     else:
         print(Fore.RED + "Error: Filenames must not be the same."+ Style.RESET_ALL)
-        exit()
+        sys.exit()
     try:
         main()
     except KeyboardInterrupt:
         print(Fore.RED + "\nKeyboard interrupt detected. Exiting..." + Style.RESET_ALL)
     finally:
         try:
-            input(Fore.BLUE + "\nHit enter to exit the code" + Style.RESET_ALL)
+                try:
+                    input(Fore.BLUE + "\nGood Bye.." + Style.RESET_ALL)
+                except ValueError:
+                    print()
+                    pass
         except KeyboardInterrupt:
             pass

@@ -20,9 +20,9 @@ File Signature (Don't Delete or Modify this lines unless you know what you are d
 
 '''
 Application Name: FileSigil
-Version: 1.0.0 (Beta)
-Release Date: 16th August 2023
-File Name: integrity_v1(B).py
+Version: 1.0.1 (Beta)
+Release Date: 31st October 2023
+File Name: filesigil_v1.1(B).py
 Python Version: 3
 Best Suitable Python Version: 3.7
 Compiled Python Version:
@@ -32,6 +32,7 @@ Tested OS Versions: Windows 10, Windows 11
 
 #!/usr/bin/python
 import os
+import sys
 import csv
 import shutil
 import zipfile
@@ -43,11 +44,11 @@ from prompt_toolkit.completion import PathCompleter
 from prompt_toolkit.shortcuts import CompleteStyle
 
 # Version of the tool
-version = "1.0.0 (Beta)"
+version = "1.0.1 (Beta)"
 init(autoreset=True)  # Initialize colorama for colored output
 
 # Check if the current OS is Windows (Backslash for Windows / Forward slash for Linux and other Unix-like systems)
-path_separator = "\\" if os.name == "nt" else "/"
+path_separator = os.path.sep
 
 # List of forbidden files, folders, and extensions
 forbidden_files = ["changelog.txt", "changelogs.txt", "changelogs", "changelog", "changelog.md", "changelogs.md", "readme.md", "readme.txt", "readme"]
@@ -65,8 +66,19 @@ project_dir = ""
 # Get the current directory of the script
 current_directory = os.path.dirname(__file__)
 
+# Get the path separator based on the operating system
+path_separator = os.path.sep
+
+# Get the directory of the executable or script
+if getattr(sys, 'frozen', False):
+    # If running as a bundled executable
+    executable_dir = os.path.dirname(sys.executable)
+else:
+    # If running as a script
+    executable_dir = os.path.dirname(os.path.abspath(__file__))
+
 # Output directory for the tool's generated files
-output_dir = current_directory + path_separator +"CDAC-K_IntegrityTool_Output"
+output_dir = os.path.join(executable_dir, "CDAC-K_IntegrityTool_Output")
 
 # Custom action to parse comma-separated lists from command-line arguments
 class CommaSeparatedListAction(argparse.Action):
@@ -216,9 +228,22 @@ def main():
         print(f"Operation Mode: " + Back.GREEN + "Default" + Style.RESET_ALL)
     else:
         print(f"Operation Mode: " + Back.RED + "Manual" + Style.RESET_ALL)
-    print(f"Blacklisted Files: {', '.join([Back.RED + item + Style.RESET_ALL for item in forbidden_files])}")
-    print(f"Blacklisted Folders: {', '.join([Back.RED + item + Style.RESET_ALL for item in forbidden_folders])}")
-    print(f"Blacklisted File Extensions: {', '.join([Back.RED + item + Style.RESET_ALL for item in forbidden_extensions])}")
+    
+    if forbidden_files:
+        print(f"Blacklisted Files: {', '.join([Back.RED + item + Style.RESET_ALL for item in forbidden_files])}")
+    else:
+        print(f"Blacklisted Files: " + Back.RED + "None" + Style.RESET_ALL + Fore.RED + " (Everything Allowed)" + Style.RESET_ALL)
+    
+    if forbidden_folders:
+        print(f"Blacklisted Folders: {', '.join([Back.RED + item + Style.RESET_ALL for item in forbidden_folders])}")
+    else:
+        print(f"Blacklisted Folders: " + Back.RED + "None" + Style.RESET_ALL + Fore.RED + " (Everything Allowed)" + Style.RESET_ALL)
+    
+    if forbidden_extensions:
+        print(f"Blacklisted Folders: {', '.join([Back.RED + item + Style.RESET_ALL for item in forbidden_extensions])}")
+    else:
+        print(f"Blacklisted Folders: " + Back.RED + "None" + Style.RESET_ALL + Fore.RED + " (Everything Allowed)" + Style.RESET_ALL)
+
     print(Back.MAGENTA + "Output Directory:" + Style.RESET_ALL + " " + output_dir)
     print(Back.MAGENTA + "CSV File Name:" + Style.RESET_ALL + " " + output_single_csv + " (" + output_dir + path_separator + output_single_csv +")")
     print(Back.MAGENTA + "ZIP File Name:" + Style.RESET_ALL + " " + zip_filename + " (" + output_dir + path_separator + zip_filename +")")
@@ -239,8 +264,6 @@ def main():
         print(Back.MAGENTA + "Path of the folder:" + Style.RESET_ALL + " " + project_dir)
         folder_path = project_dir
     folder_path = os.path.abspath(folder_path)
-    # print ('folder_path',folder_path)
-    # print('current_directory',current_directory)
     if not pathCheck(folder_path, current_directory):
         print(Fore.RED + "Run this program from outside of the project directory." + Style.RESET_ALL)
         exit()
@@ -284,41 +307,56 @@ if __name__ == "__main__":
     parser.add_argument("--hashcsv", "-hc", type=str, help="enter a name for the hash csv file")
     parser.add_argument("--zipcsv", "-zc", type=str, help="enter a name for the zip hash csv file")
     parser.add_argument("--zip", "-z", type=str, help="enter a name for the zip file")
-    parser.add_argument("--file", "-f", help="Enter custom list of blacklisted files (coma separated without space)", action=CommaSeparatedListAction)
-    parser.add_argument("--directory", "-d", help="Enter custom list of blacklisted directory's (coma separated  without space)", action=CommaSeparatedListAction)
-    parser.add_argument("--extension", "-e", help="Enter custom list of blacklisted extension's (coma separated  without space)", action=CommaSeparatedListAction)
+    parser.add_argument("--file", "-f", help="Enter custom list of blacklisted files (coma separated without space), None for allow everything", action=CommaSeparatedListAction)
+    parser.add_argument("--directory", "-d", help="Enter custom list of blacklisted directory's (coma separated  without space), None for allow everything", action=CommaSeparatedListAction)
+    parser.add_argument("--extension", "-e", help="Enter custom list of blacklisted extension's (coma separated  without space), None for allow everything", action=CommaSeparatedListAction)
     args = parser.parse_args()
     custom_file = args.file
     custom_dicts = args.directory
     custom_extension = args.extension
+    user_input_working_dict = args.input
+    user_input_output_dict = args.output
+    if user_input_working_dict and user_input_working_dict.endswith('"'):
+        user_input_working_dict = os.path.abspath(user_input_working_dict[:-1])
+    if user_input_output_dict and user_input_output_dict.endswith('"'):
+        user_input_output_dict = os.path.abspath(user_input_output_dict[:-1])
+    
     if not custom_file and not custom_dicts and not custom_extension:
         mode = "Default"
     else:
         mode = "Manual"
         if custom_file:
-            forbidden_files = custom_file
+            if (custom_file[0].lower()) == "none" or custom_file[0].strip() == "":
+                forbidden_files = []
+            else:
+                forbidden_files = custom_file
         if custom_dicts:
-            forbidden_folders = custom_dicts
+            if (custom_dicts[0].lower()) == "none" or custom_dicts[0].strip() == "":
+                forbidden_folders = []
+            else:
+                forbidden_folders = custom_dicts
         if custom_extension:
-            forbidden_extensions = custom_extension
-    if args.input is not None:
-        if not os.path.exists(args.input):
+            if (custom_extension[0].lower()) == "none" or custom_extension[0].strip() == "":
+                forbidden_extensions = []
+            else:
+                forbidden_extensions = custom_extension
+    if user_input_working_dict is not None:
+        if not os.path.exists(user_input_working_dict):
             print(Fore.RED + "Error: Input path do not exist." + Style.RESET_ALL)
             exit()
         else:
-            project_dir = args.input
-            common_path = os.path.commonpath([project_dir, current_directory])
-            if common_path == project_dir or common_path == current_directory:
-                print(Fore.RED + "Place the program out side of project directory" + Style.RESET_ALL)
+            project_dir = user_input_working_dict
+            if not pathCheck(user_input_working_dict, current_directory):
+                print(Fore.RED + "Place the program out side of project directory." + Style.RESET_ALL)
                 exit()
-    if args.output is not None:
-        if not os.path.exists(args.output):
+    if user_input_output_dict is not None:
+        if not os.path.exists(user_input_output_dict):
             print(Fore.RED + "Error: Output path do not exist." + Style.RESET_ALL)
             exit()
         else:
-            output_dir = args.output
-            if args.input is not None:
-                if not pathCheck(args.input, output_dir):
+            output_dir = user_input_output_dict
+            if user_input_working_dict is not None:
+                if not pathCheck(user_input_working_dict, output_dir):
                     print(Fore.RED + "Output directory must outside of the project directory." + Style.RESET_ALL)
                     exit()
     if args.hashcsv is not None:
@@ -348,3 +386,8 @@ if __name__ == "__main__":
         main()
     except KeyboardInterrupt:
         print(Fore.RED + "\nKeyboard interrupt detected. Exiting..." + Style.RESET_ALL)
+    finally:
+        try:
+            input(Fore.BLUE + "\nHit enter to exit the code" + Style.RESET_ALL)
+        except KeyboardInterrupt:
+            pass
